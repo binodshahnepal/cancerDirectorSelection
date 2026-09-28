@@ -290,7 +290,7 @@ export default function ApplicantDashboard() {
         </div>
 
         {/* MAIN FORM CONTAINER */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-10 shadow-sm space-y-6">
+        <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 shadow-sm space-y-6">
 
           {/* TAB 1: Personal Details */}
           {activeTab === 1 && (
@@ -897,7 +897,7 @@ export default function ApplicantDashboard() {
 
               <div className="space-y-3">
                 {(appData.trainings || []).map((trg: any, idx: number) => (
-                  <div key={idx} className="p-3 border border-slate-200 rounded-xl bg-slate-50 grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div key={idx} className="p-3 border border-slate-200 rounded-xl bg-slate-50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <input
                       type="text"
                       disabled={isSubmitted}

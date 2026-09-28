@@ -123,10 +123,10 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500">Executive Director Position | B.P. Koirala Memorial Cancer Hospital</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <button
               onClick={handlePrintAll}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2"
+              className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <span>🖨️ Print All Applications ({applications.length})</span>
             </button>
@@ -276,20 +276,20 @@ export default function AdminDashboard() {
 
       {/* APPLICANT DETAIL INSPECTOR MODAL */}
       {selectedApp && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl space-y-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-8 shadow-2xl space-y-5 sm:space-y-6">
             
             {/* Modal Header */}
-            <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-200 pb-4">
               <div>
                 <span className="text-xs font-mono bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-blue-800 font-bold">
                   {selectedApp.appNo}
                 </span>
-                <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1.5">
                   {selectedApp.applicantNameEn || selectedApp.user?.name}
                 </h3>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                 <button
                   onClick={() => handlePrintIndividual(selectedApp.id)}
                   className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
@@ -298,7 +298,7 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   onClick={() => setSelectedApp(null)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center shrink-0"
                 >
                   ✕
                 </button>

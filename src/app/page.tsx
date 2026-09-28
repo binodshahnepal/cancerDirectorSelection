@@ -20,28 +20,28 @@ export default function HomePage() {
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 space-y-8">
         {/* Banner Card */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-10 shadow-sm space-y-5">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 md:p-10 shadow-sm space-y-4 sm:space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold rounded-full">
             <span>📢 Official Vacancy Announcement</span>
           </div>
 
-          <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
             B.P. Koirala Memorial Cancer Hospital
           </h2>
-          <p className="text-sm md:text-base text-slate-600">Bharatpur, Chitwan, Nepal</p>
+          <p className="text-xs sm:text-sm md:text-base text-slate-600">Bharatpur, Chitwan, Nepal</p>
 
-          <div className="p-4 bg-blue-50/60 border border-blue-200 rounded-xl space-y-1">
-            <h3 className="text-lg font-bold text-blue-900">
+          <div className="p-3 sm:p-4 bg-blue-50/60 border border-blue-200 rounded-xl space-y-1">
+            <h3 className="text-sm sm:text-lg font-bold text-blue-900 leading-snug">
               Application Form for Appointment to the Post of Executive Director
             </h3>
-            <p className="text-xs text-slate-600">Notice No.: 01/2083/2084 | Position: Executive Director</p>
+            <p className="text-[11px] sm:text-xs text-slate-600">Notice No.: 01/2083/2084 | Position: Executive Director</p>
           </div>
 
-          <div className="flex flex-wrap gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-2">
             {user ? (
               <Link
                 href={user.role === 'ADMIN' ? '/admin/dashboard' : '/applicant/dashboard'}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-sm text-sm flex items-center gap-2"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-sm text-xs sm:text-sm flex items-center justify-center gap-2"
               >
                 <span>{user.role === 'ADMIN' ? 'Go to Admin Dashboard' : 'Go to Application Dashboard'}</span>
                 <span>→</span>
@@ -50,14 +50,14 @@ export default function HomePage() {
               <>
                 <Link
                   href="/register"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-sm text-sm flex items-center gap-2"
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-sm text-xs sm:text-sm flex items-center justify-center gap-2"
                 >
                   <span>Apply Online</span>
                   <span>→</span>
                 </Link>
                 <Link
                   href="/login"
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold px-6 py-3 rounded-xl transition-all text-sm"
+                  className="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold px-6 py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center"
                 >
                   <span>Login to Portal</span>
                 </Link>

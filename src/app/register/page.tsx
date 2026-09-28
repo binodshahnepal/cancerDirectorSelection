@@ -106,7 +106,7 @@ export default function RegisterPage() {
         </div>
 
         {/* RIGHT COLUMN: INTERACTIVE SIGN UP FORM */}
-        <div className="lg:col-span-7 p-8 md:p-12 flex flex-col justify-center space-y-6 bg-white dark:bg-slate-900">
+        <div className="lg:col-span-7 p-5 sm:p-8 md:p-12 flex flex-col justify-center space-y-5 sm:space-y-6 bg-white dark:bg-slate-900">
           
           {/* Header */}
           <div className="flex justify-between items-center">

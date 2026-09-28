@@ -109,17 +109,17 @@ export default function LoginPage() {
         </div>
 
         {/* RIGHT COLUMN: INTERACTIVE ANIMATED FORM */}
-        <div className="lg:col-span-7 p-8 md:p-12 flex flex-col justify-center space-y-6 bg-white dark:bg-slate-900">
+        <div className="lg:col-span-7 p-5 sm:p-8 md:p-12 flex flex-col justify-center space-y-5 sm:space-y-6 bg-white dark:bg-slate-900">
           
           {/* Header & Role Switcher */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Welcome Back</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Welcome Back</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Please enter your account details to sign in</p>
               </div>
               <Link href="/" className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                ← Back to Home
+                ← Home
               </Link>
             </div>
 
@@ -128,19 +128,19 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setRoleMode('APPLICANT')}
-                className={`py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                   roleMode === 'APPLICANT'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-md font-extrabold'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span>👤 Applicant Login</span>
+                <span>👤 Applicant</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setRoleMode('ADMIN')}
-                className={`py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                   roleMode === 'ADMIN'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-md font-extrabold'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -160,7 +160,7 @@ export default function LoginPage() {
           )}
 
           {/* LOGIN FORM */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
                 Email Address
@@ -227,7 +227,7 @@ export default function LoginPage() {
           </form>
 
           {/* ADMIN AUTO-FILL HELPER CARD */}
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-teal-50 dark:from-slate-800 dark:to-slate-800/80 rounded-2xl border border-blue-200/60 dark:border-slate-700 flex justify-between items-center transition-all hover:border-blue-300">
+          <div className="p-3.5 sm:p-4 bg-gradient-to-r from-blue-50 to-teal-50 dark:from-slate-800 dark:to-slate-800/80 rounded-2xl border border-blue-200/60 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-all hover:border-blue-300">
             <div className="space-y-0.5">
               <span className="font-extrabold text-xs text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
                 <span>🛡️ Quick Admin Test Access</span>
@@ -239,7 +239,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={fillAdminCredentials}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-transform active:scale-95 whitespace-nowrap"
+              className="w-full sm:w-auto px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-transform active:scale-95 text-center"
             >
               Auto-Fill Admin
             </button>
