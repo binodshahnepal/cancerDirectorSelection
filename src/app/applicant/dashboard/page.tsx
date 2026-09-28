@@ -385,16 +385,16 @@ export default function ApplicantDashboard() {
                   />
                 </div>
 
-                {/* CITIZENSHIP ISSUE DISTRICT DROPDOWN - ALL 77 DISTRICTS */}
+                {/* CITIZENSHIP ISSUE DISTRICT DROPDOWN */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Citizenship Issue District (All 77 Districts) *</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Citizenship Issue District *</label>
                   <select
                     disabled={isSubmitted}
                     value={appData.citizenshipDistrict || 'Chitwan'}
                     onChange={(e) => setAppData({ ...appData, citizenshipDistrict: e.target.value })}
                     className="w-full px-3.5 py-2.5 text-xs md:text-sm border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-blue-600 font-medium"
                   >
-                    <option value="">Select Citizenship Issue District ({allDistricts.length} Districts)</option>
+                    <option value="">Select Citizenship Issue District</option>
                     {allDistricts.map(d => (
                       <option key={d} value={d}>{d}</option>
                     ))}
@@ -497,9 +497,9 @@ export default function ApplicantDashboard() {
                     </select>
                   </div>
 
-                  {/* ALL 77 DISTRICTS DROPDOWN */}
+                  {/* DISTRICT DROPDOWN */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">District (All 77 Districts) *</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">District *</label>
                     <select
                       disabled={isSubmitted}
                       value={appData.permDistrict || 'Chitwan'}
@@ -510,7 +510,7 @@ export default function ApplicantDashboard() {
                       }}
                       className="w-full px-3.5 py-2.5 text-xs md:text-sm border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-blue-600 font-medium"
                     >
-                      <option value="">Select District ({allDistricts.length} Districts)</option>
+                      <option value="">Select District</option>
                       {allDistricts.map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
@@ -592,7 +592,7 @@ export default function ApplicantDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">District (All 77 Districts)</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">District</label>
                     <select
                       disabled={isSubmitted}
                       value={appData.tempDistrict || 'Chitwan'}
@@ -603,7 +603,7 @@ export default function ApplicantDashboard() {
                       }}
                       className="w-full px-3.5 py-2.5 text-xs md:text-sm border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-blue-600 font-medium"
                     >
-                      <option value="">Select District ({allDistricts.length} Districts)</option>
+                      <option value="">Select District</option>
                       {allDistricts.map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
