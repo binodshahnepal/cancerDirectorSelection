@@ -55,3 +55,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getSessionUser();
+    if (!session || session.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const applicationId = searchParams.get('id');
+
+    if (!applicationId) {
+      return NextResponse.json({ error: 'Application ID is required' }, { status: 400 });
+    }
+
+    await prisma.application.delete({
+      where: { id: applicationId }
+    });
+
+    return NextResponse.json({ success: true, message: 'Application deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete application error:', error);
+    return NextResponse.json({ error: 'Failed to delete application' }, { status: 500 });
+  }
+}

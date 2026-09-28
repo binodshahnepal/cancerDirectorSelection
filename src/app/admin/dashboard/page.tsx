@@ -84,6 +84,28 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDelete = async (appId: string) => {
+    if (!window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/applications?id=${encodeURIComponent(appId)}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (selectedApp?.id === appId) {
+          setSelectedApp(null);
+        }
+        fetchApplications();
+      } else {
+        alert(data.error || 'Failed to delete application');
+      }
+    } catch (err) {
+      alert('Error deleting application');
+    }
+  };
+
   const handlePrintIndividual = (appId: string) => {
     window.open(`/admin/print?id=${encodeURIComponent(appId)}`, '_blank');
   };
@@ -263,6 +285,13 @@ export default function AdminDashboard() {
                           >
                             Inspect Profile
                           </button>
+                          <button
+                            onClick={() => handleDelete(app.id)}
+                            className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold text-xs transition-all flex items-center gap-1"
+                            title="Delete Application"
+                          >
+                            <span>🗑️ Delete</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -403,7 +432,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => handleVerify('APPROVED')}
@@ -416,9 +445,16 @@ export default function AdminDashboard() {
                   type="button"
                   onClick={() => handleVerify('REJECTED')}
                   disabled={verifying}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                  className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
                 >
                   {verifying ? 'Updating...' : '❌ Reject Application'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(selectedApp.id)}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                >
+                  🗑️ Delete Application
                 </button>
               </div>
             </div>

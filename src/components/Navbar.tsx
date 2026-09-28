@@ -20,18 +20,12 @@ export default function Navbar({ user }: NavbarProps) {
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex justify-between items-center gap-2">
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-lg sm:text-xl text-white shadow-sm shrink-0">
-            🏥
-          </div>
-          <div>
-            <h1 className="font-bold text-slate-900 text-xs sm:text-base leading-tight tracking-tight">
-              B.P. Koirala Memorial Cancer Hospital
-            </h1>
-            <p className="text-[10px] sm:text-xs text-blue-600 font-semibold truncate max-w-[200px] sm:max-w-none">
-              Bharatpur, Chitwan, Nepal | Recruitment Portal
-            </p>
-          </div>
+        <Link href="/" className="flex items-center gap-3 shrink-0 py-1">
+          <img
+            src="/bkmch-header.png"
+            alt="B.P. Koirala Memorial Cancer Hospital Header"
+            className="h-10 sm:h-14 w-auto object-contain rounded-lg"
+          />
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">

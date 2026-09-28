@@ -14,6 +14,8 @@ export default function ApplicantDashboard() {
   const [activeTab, setActiveTab] = useState(1);
   const router = useRouter();
 
+  const [isEditing, setIsEditing] = useState(false);
+
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
@@ -77,6 +79,9 @@ export default function ApplicantDashboard() {
       const data = await res.json();
       if (data.success) {
         setAppData(data.application);
+        if (submitNow) {
+          setIsEditing(false);
+        }
         setMsg({
           type: 'success',
           text: submitNow ? '🎉 Application Submitted Successfully!' : '💾 Application Draft Saved Successfully!'
@@ -164,7 +169,7 @@ export default function ApplicantDashboard() {
     );
   }
 
-  const isSubmitted = appData?.status === 'SUBMITTED' || appData?.status === 'APPROVED' || appData?.status === 'REJECTED';
+  const isSubmitted = (appData?.status === 'SUBMITTED' || appData?.status === 'APPROVED' || appData?.status === 'REJECTED') && !isEditing;
   const completionPct = calculateCompletion();
 
   const tabs = [
@@ -202,7 +207,7 @@ export default function ApplicantDashboard() {
                     : 'bg-amber-400 text-slate-950 font-black'
                 }`}
               >
-                ● {appData?.status}
+                ● {appData?.status} {isEditing ? '(Editing)' : ''}
               </span>
             </div>
 
@@ -230,7 +235,20 @@ export default function ApplicantDashboard() {
 
           {/* Action Buttons */}
           <div className="z-10 flex flex-wrap md:flex-col gap-2.5 w-full md:w-auto">
-            {!isSubmitted && (
+            {isSubmitted ? (
+              <button
+                onClick={() => {
+                  setIsEditing(true);
+                  setMsg({
+                    type: 'success',
+                    text: '✏️ Form editing unlocked! You can now update any details and save or re-submit.'
+                  });
+                }}
+                className="flex-1 md:flex-none px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5"
+              >
+                ✏️ Edit Application
+              </button>
+            ) : (
               <>
                 <button
                   onClick={() => handleSave(false)}
@@ -244,7 +262,7 @@ export default function ApplicantDashboard() {
                   disabled={saving || !appData?.declarationAccepted}
                   className="flex-1 md:flex-none px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50"
                 >
-                  🚀 Submit Application
+                  🚀 {appData?.status === 'SUBMITTED' ? 'Update & Re-submit' : 'Submit Application'}
                 </button>
               </>
             )}

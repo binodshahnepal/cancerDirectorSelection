@@ -83,12 +83,11 @@ function AdminPrintContent() {
               style={{ pageBreakAfter: index < applications.length - 1 ? 'always' : 'auto' }}
             >
               {/* Header */}
-              <div className="text-center space-y-1 border-b-2 border-slate-900 pb-4">
-                <h1 className="font-extrabold text-xl md:text-2xl text-slate-900 tracking-tight">
-                  B.P. KOIRALA MEMORIAL CANCER HOSPITAL
-                </h1>
-                <p className="font-semibold text-xs text-slate-700">BHARATPUR, CHITWAN, NEPAL</p>
-                <p className="font-bold text-sm text-blue-900 pt-1">
+              <div className="text-center space-y-2 border-b-2 border-slate-900 pb-4">
+                <div className="flex justify-center mb-2">
+                  <img src="/bkmch-header.png" alt="B.P. Koirala Memorial Cancer Hospital Header" className="h-16 md:h-20 object-contain mx-auto" />
+                </div>
+                <p className="font-extrabold text-sm md:text-base text-blue-900 pt-1">
                   APPLICATION FORM FOR APPOINTMENT TO THE POST OF EXECUTIVE DIRECTOR
                 </p>
 
