@@ -22,7 +22,6 @@ async function main() {
     });
     console.log('Seeded Admin account created successfully!');
     console.log('Admin Email: admin@bkmch.gov.np');
-    console.log('Admin Password: Admin@123456');
   } else {
     console.log('Admin account already exists.');
   }

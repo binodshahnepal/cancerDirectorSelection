@@ -44,12 +44,6 @@ export default function LoginPage() {
     }
   };
 
-  const fillAdminCredentials = () => {
-    setRoleMode('ADMIN');
-    setEmail('admin@bkmch.gov.np');
-    setPassword('Admin@123456');
-  };
-
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center relative overflow-hidden font-sans selection:bg-blue-500 selection:text-white p-4 md:p-8">
       {/* ANIMATED BACKGROUND AMBIENT LIGHT BLOBS */}
@@ -174,7 +168,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={roleMode === 'ADMIN' ? 'admin@bkmch.gov.np' : 'your.email@example.com'}
+                  placeholder="your.email@example.com"
                   className="w-full pl-10 pr-4 py-3 text-xs md:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
@@ -225,25 +219,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* ADMIN AUTO-FILL HELPER CARD */}
-          <div className="p-3.5 sm:p-4 bg-gradient-to-r from-blue-50 to-teal-50 dark:from-slate-800 dark:to-slate-800/80 rounded-2xl border border-blue-200/60 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-all hover:border-blue-300">
-            <div className="space-y-0.5">
-              <span className="font-extrabold text-xs text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
-                <span>🛡️ Quick Admin Test Access</span>
-              </span>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                Email: <code className="font-mono text-slate-900 dark:text-slate-200 font-bold">admin@bkmch.gov.np</code>
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={fillAdminCredentials}
-              className="w-full sm:w-auto px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-transform active:scale-95 text-center"
-            >
-              Auto-Fill Admin
-            </button>
-          </div>
 
           {/* FOOTER LINK */}
           <div className="text-center text-xs text-slate-500 dark:text-slate-400">
