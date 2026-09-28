@@ -96,12 +96,49 @@ export default function ApplicantDashboard() {
     }
   };
 
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const formatDocTypeLabel = (docType: string) => {
+    switch (docType) {
+      case 'CITIZENSHIP_FRONT':
+        return 'Citizenship (Front)';
+      case 'CITIZENSHIP_BACK':
+        return 'Citizenship (Back)';
+      case 'CITIZENSHIP':
+        return 'Citizenship Certificate';
+      case 'PASSPORT_FRONT':
+        return 'Passport / Photo (Front)';
+      case 'PASSPORT_BACK':
+        return 'Passport (Back)';
+      case 'PHOTO':
+        return 'Passport Photo / Passport';
+      case 'COUNCIL_REG':
+        return 'Medical Council Registration';
+      case 'ACADEMIC':
+        return 'Academic Transcript / Certificate';
+      case 'EXPERIENCE':
+        return 'Work Experience Document';
+      case 'TRAINING':
+        return 'Training / Qualification Certificate';
+      case 'CV':
+        return 'Curriculum Vitae (CV)';
+      default:
+        return docType;
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string, titlePrefix: string) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !appData) return;
 
+    const targetInput = e.target;
     try {
-      setMsg({ type: 'success', text: `Uploading ${files.length} document file(s)...` });
+      setMsg({ type: 'success', text: `⏳ Uploading ${files.length} document file(s)... Please wait.` });
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const formData = new FormData();
@@ -120,8 +157,9 @@ export default function ApplicantDashboard() {
           return;
         }
       }
+      targetInput.value = '';
       await fetchApplication();
-      setMsg({ type: 'success', text: '✅ Document(s) Uploaded Successfully!' });
+      setMsg({ type: 'success', text: '🎉 Document(s) Uploaded Successfully!' });
     } catch (err) {
       setMsg({ type: 'error', text: 'File upload failed.' });
     }
@@ -161,24 +199,31 @@ export default function ApplicantDashboard() {
         <label className="font-bold block text-slate-800 text-xs">{titleLabel}</label>
         {uploaded ? (
           <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800">
-            <div className="truncate max-w-[240px] flex items-center gap-1.5">
+            <div className="truncate max-w-[200px] flex items-center gap-1.5">
               <span className="font-extrabold text-emerald-600">✓</span>
-              <span className="truncate font-semibold text-xs">{uploaded.fileName}</span>
+              <span className="truncate font-semibold text-xs" title={uploaded.fileName}>
+                {uploaded.fileName}
+              </span>
+              {uploaded.fileSize && (
+                <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded shrink-0">
+                  {formatFileSize(uploaded.fileSize)}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <a
                 href={uploaded.filePath}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200"
+                className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200"
               >
-                View
+                👁️ View
               </a>
               {!isSubmitted && (
                 <button
                   type="button"
                   onClick={() => handleDeleteDocument(uploaded.id)}
-                  className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200"
+                  className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-md border border-red-200"
                   title="Delete document"
                 >
                   🗑️ Delete
@@ -206,24 +251,29 @@ export default function ApplicantDashboard() {
         {docs.length > 0 && (
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-slate-600">Uploaded Documents ({docs.length}):</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {docs.map((doc: any) => (
                 <div
                   key={doc.id}
                   className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800"
                 >
-                  <div className="truncate max-w-[200px] flex items-center gap-1.5">
+                  <div className="truncate max-w-[240px] flex items-center gap-1.5">
                     <span className="font-extrabold text-emerald-600">✓</span>
                     <span className="truncate font-semibold text-xs" title={doc.fileName}>{doc.fileName}</span>
+                    {doc.fileSize && (
+                      <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded shrink-0">
+                        {formatFileSize(doc.fileSize)}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <a
                       href={doc.filePath}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200"
+                      className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200"
                     >
-                      View
+                      👁️ View
                     </a>
                     {!isSubmitted && (
                       <button
@@ -259,6 +309,7 @@ export default function ApplicantDashboard() {
       </div>
     );
   };
+
 
 
   const addQualificationRow = () => {
@@ -1173,6 +1224,79 @@ export default function ApplicantDashboard() {
               </div>
 
               <div className="space-y-6 text-xs">
+                {/* MASTER UPLOADED DOCUMENTS OVERVIEW MANAGER */}
+                <div className="p-5 border border-blue-200 rounded-2xl bg-blue-50/40 space-y-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-blue-200 pb-3">
+                    <div>
+                      <h4 className="font-extrabold text-sm text-blue-900 flex items-center gap-2">
+                        <span>📋</span> Uploaded Documents Manager ({(appData?.documents || []).length} Files Uploaded)
+                      </h4>
+                      <p className="text-slate-500 text-[11px]">All uploaded files for your application are listed below with preview and deletion options</p>
+                    </div>
+                    <span className="text-xs font-mono font-bold px-3 py-1 bg-blue-600 text-white rounded-full">
+                      Total Files: {(appData?.documents || []).length}
+                    </span>
+                  </div>
+
+                  {(appData?.documents || []).length === 0 ? (
+                    <div className="p-6 text-center text-slate-500 bg-white rounded-xl border border-dashed border-slate-300 space-y-1">
+                      <p className="font-bold text-xs">No documents uploaded yet.</p>
+                      <p className="text-[11px]">Use the upload sections below to attach your required certificates, transcripts, and documents.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                      <table className="w-full text-xs text-left border-collapse">
+                        <thead className="bg-slate-100 text-slate-800 uppercase font-extrabold text-[11px] tracking-wider">
+                          <tr>
+                            <th className="p-3 border-b border-slate-200">#</th>
+                            <th className="p-3 border-b border-slate-200">Document Category</th>
+                            <th className="p-3 border-b border-slate-200">File Name</th>
+                            <th className="p-3 border-b border-slate-200">File Size</th>
+                            <th className="p-3 border-b border-slate-200 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 text-slate-700">
+                          {(appData?.documents || []).map((doc: any, idx: number) => (
+                            <tr key={doc.id} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="p-3 font-bold text-slate-400 text-center">{idx + 1}</td>
+                              <td className="p-3">
+                                <span className="px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-md font-bold text-[11px]">
+                                  {formatDocTypeLabel(doc.docType)}
+                                </span>
+                              </td>
+                              <td className="p-3 font-semibold text-slate-900 max-w-[220px] truncate" title={doc.fileName}>
+                                📄 {doc.fileName}
+                              </td>
+                              <td className="p-3 font-mono text-slate-500">{formatFileSize(doc.fileSize)}</td>
+                              <td className="p-3 text-right">
+                                <div className="flex justify-end items-center gap-2">
+                                  <a
+                                    href={doc.filePath}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] rounded-lg shadow-sm transition-all flex items-center gap-1"
+                                  >
+                                    <span>👁️ View File</span>
+                                  </a>
+                                  {!isSubmitted && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteDocument(doc.id)}
+                                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-[11px] rounded-lg transition-all flex items-center gap-1"
+                                    >
+                                      <span>🗑️ Delete File</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
                 {/* 1. CITIZENSHIP SECTION (Front & Back) */}
                 <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-4 shadow-sm">
                   <div>
