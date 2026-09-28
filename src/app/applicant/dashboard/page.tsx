@@ -151,6 +151,14 @@ export default function ApplicantDashboard() {
           method: 'POST',
           body: formData
         });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error('Upload error response:', res.status, errText);
+          setMsg({ type: 'error', text: `Upload failed (HTTP ${res.status}). File size may exceed limits or server error occurred.` });
+          return;
+        }
+
         const data = await res.json();
         if (!data.success) {
           setMsg({ type: 'error', text: data.error || `Failed to upload ${file.name}` });
@@ -160,8 +168,9 @@ export default function ApplicantDashboard() {
       targetInput.value = '';
       await fetchApplication();
       setMsg({ type: 'success', text: '🎉 Document(s) Uploaded Successfully!' });
-    } catch (err) {
-      setMsg({ type: 'error', text: 'File upload failed.' });
+    } catch (err: any) {
+      console.error('Upload exception:', err);
+      setMsg({ type: 'error', text: `File upload failed: ${err.message || 'Error uploading file'}` });
     }
   };
 
@@ -187,13 +196,6 @@ export default function ApplicantDashboard() {
     if (!appData?.documents) return [];
     const targetTypes = [docType, ...legacyTypes].map(t => t.toUpperCase());
 
-    if (docType === 'CITIZENSHIP_FRONT' || docType === 'CITIZENSHIP_BACK') {
-      targetTypes.push('CITIZENSHIP');
-    }
-    if (docType === 'PASSPORT_FRONT' || docType === 'PASSPORT_BACK') {
-      targetTypes.push('PHOTO', 'PASSPORT');
-    }
-
     return appData.documents.filter((d: any) =>
       targetTypes.includes((d.docType || '').toUpperCase())
     );
@@ -205,7 +207,7 @@ export default function ApplicantDashboard() {
     return (
       <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2">
         <label className="font-bold block text-slate-800 text-xs">{titleLabel}</label>
-        {docs.length > 0 ? (
+        {docs.length > 0 && (
           <div className="space-y-2">
             {docs.map((uploaded: any) => (
               <div key={uploaded.id} className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800">
@@ -243,14 +245,23 @@ export default function ApplicantDashboard() {
               </div>
             ))}
           </div>
-        ) : (
-          <input
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
-            disabled={isSubmitted}
-            onChange={(e) => handleFileUpload(e, docType, titleLabel)}
-            className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"
-          />
+        )}
+
+        {!isSubmitted && (
+          <div className="pt-1">
+            {docs.length > 0 && (
+              <span className="text-[10px] font-bold text-slate-500 block mb-1">
+                Replace or Upload New File:
+              </span>
+            )}
+            <input
+              type="file"
+              accept="image/*,.pdf,.doc,.docx"
+              disabled={isSubmitted}
+              onChange={(e) => handleFileUpload(e, docType, titleLabel)}
+              className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"
+            />
+          </div>
         )}
       </div>
     );
@@ -308,12 +319,12 @@ export default function ApplicantDashboard() {
         {!isSubmitted && (
           <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1">
-              {docs.length > 0 ? '+ Add More File(s) (PDF or Image files allowed):' : 'Select File(s) to upload:'}
+              {docs.length > 0 ? '+ Add More File(s) (Images, PDF, Word documents allowed):' : 'Select File(s) to upload:'}
             </label>
             <input
               type="file"
               multiple
-              accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
+              accept="image/*,.pdf,.doc,.docx"
               disabled={isSubmitted}
               onChange={(e) => handleFileUpload(e, docType, titleLabel)}
               className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"
