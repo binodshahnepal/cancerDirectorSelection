@@ -114,6 +114,10 @@ export default function AdminDashboard() {
     window.open(`/admin/print?all=true&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(search)}`, '_blank');
   };
 
+  const handleMergePdf = (appId: string) => {
+    window.open(`/api/admin/merge-pdf?id=${encodeURIComponent(appId)}`, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center font-sans">
@@ -277,6 +281,13 @@ export default function AdminDashboard() {
                             <span>🖨️ Print</span>
                           </button>
                           <button
+                            onClick={() => handleMergePdf(app.id)}
+                            className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl font-bold text-xs transition-all flex items-center gap-1"
+                            title="Merge Application & Uploaded Documents into single PDF"
+                          >
+                            <span>📦 Merged PDF</span>
+                          </button>
+                          <button
                             onClick={() => {
                               setSelectedApp(app);
                               setRemarks(app.remarks || '');
@@ -318,7 +329,14 @@ export default function AdminDashboard() {
                   {selectedApp.applicantNameEn || selectedApp.user?.name}
                 </h3>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
+                <button
+                  onClick={() => handleMergePdf(selectedApp.id)}
+                  className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
+                  title="Merge Application Sheet and all Attached Files into single PDF"
+                >
+                  <span>📦 Merged PDF Dossier</span>
+                </button>
                 <button
                   onClick={() => handlePrintIndividual(selectedApp.id)}
                   className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
