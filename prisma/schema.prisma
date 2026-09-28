@@ -1,0 +1,122 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         String        @default("APPLICANT") // "APPLICANT" | "ADMIN"
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+}
+
+model Application {
+  id                  String          @id @default(uuid())
+  appNo               String          @unique
+  userId              String
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status              String          @default("DRAFT") // DRAFT, SUBMITTED, APPROVED, REJECTED
+  
+  // Personal Details
+  applicantNameNp     String?
+  applicantNameEn     String?
+  dob                 String?
+  age                 String?
+  gender              String?
+  citizenshipNo       String?
+  citizenshipDistrict String?
+  citizenshipDate     String?
+  fatherName          String?
+  motherName          String?
+  grandfatherName     String?
+  spouseName          String?
+
+  // Permanent Address
+  permProvince        String?
+  permDistrict        String?
+  permLocalBody       String?
+  permWard            String?
+  permTole            String?
+  permPhone           String?
+  permEmail           String?
+
+  // Current Address
+  tempProvince        String?
+  tempDistrict        String?
+  tempLocalBody       String?
+  tempWard            String?
+  tempTole            String?
+  tempPhone           String?
+
+  // Other Details
+  awards              String?
+  publications        String?
+  otherDetails        String?
+  declarationAccepted Boolean         @default(false)
+
+  // Verification Audit
+  remarks             String?
+  verifiedBy          String?
+  verifiedAt          DateTime?
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  qualifications      Qualification[]
+  experiences         Experience[]
+  trainings           Training[]
+  documents           Document[]
+}
+
+model Qualification {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  degree        String
+  subject       String
+  university    String
+  passedYear    String
+  divisionGpa   String
+}
+
+model Experience {
+  id               String      @id @default(uuid())
+  applicationId    String
+  application      Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  organization     String
+  designation      String
+  periodFrom       String
+  periodTo         String
+  responsibilities String
+}
+
+model Training {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title         String
+  institution   String
+  duration      String
+  yearObtained  String
+}
+
+model Document {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  docType       String      // CITIZENSHIP, ACADEMIC, COUNCIL_REG, EXPERIENCE, TRAINING, CV, PHOTO, OTHER
+  title         String
+  fileName      String
+  filePath      String
+  fileSize      Int
+  mimeType      String
+  uploadedAt    DateTime    @default(now())
+}

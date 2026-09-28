@@ -1,0 +1,431 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
+
+export default function AdminDashboard() {
+  const [user, setUser] = useState<any>(null);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({ total: 0, pending: 0, approved: 0, rejected: 0, drafts: 0 });
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [selectedApp, setSelectedApp] = useState<any>(null);
+  const [remarks, setRemarks] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [verifying, setVerifying] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.user || data.user.role !== 'ADMIN') {
+          router.push('/login');
+          return;
+        }
+        setUser(data.user);
+        fetchApplications();
+      })
+      .catch(() => router.push('/login'));
+  }, []);
+
+  const fetchApplications = async (queryStr = search, statusStr = statusFilter) => {
+    try {
+      const url = `/api/admin/applications?q=${encodeURIComponent(queryStr)}&status=${encodeURIComponent(statusStr)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.applications) {
+        setApplications(data.applications);
+        setStats(data.stats);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearch(val);
+    fetchApplications(val, statusFilter);
+  };
+
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setStatusFilter(val);
+    fetchApplications(search, val);
+  };
+
+  const handleVerify = async (status: 'APPROVED' | 'REJECTED') => {
+    if (!selectedApp) return;
+    setVerifying(true);
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: selectedApp.id,
+          status,
+          remarks
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelectedApp(null);
+        setRemarks('');
+        fetchApplications();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handlePrintIndividual = (appId: string) => {
+    window.open(`/admin/print?id=${encodeURIComponent(appId)}`, '_blank');
+  };
+
+  const handlePrintAll = () => {
+    window.open(`/admin/print?all=true&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(search)}`, '_blank');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center font-sans">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs font-semibold text-slate-500">Loading Administrator Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+      <Navbar user={user} />
+
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8 space-y-6">
+        
+        {/* HEADER & TOP ACTIONS */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-800 text-xs font-extrabold rounded-full">
+                🛡️ Administrator Access
+              </span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mt-1">
+              Recruitment Verification Portal
+            </h2>
+            <p className="text-xs text-slate-500">Executive Director Position | B.P. Koirala Memorial Cancer Hospital</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handlePrintAll}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2"
+            >
+              <span>🖨️ Print All Applications ({applications.length})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* METRICS STATS CARDS */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-1 hover:border-slate-300 transition-all">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Applicants</span>
+            <p className="text-3xl font-black text-slate-900">{stats.total}</p>
+          </div>
+
+          <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-5 shadow-sm space-y-1 hover:border-blue-300 transition-all">
+            <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Pending Review</span>
+            <p className="text-3xl font-black text-blue-900">{stats.pending}</p>
+          </div>
+
+          <div className="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-5 shadow-sm space-y-1 hover:border-emerald-300 transition-all">
+            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Approved</span>
+            <p className="text-3xl font-black text-emerald-900">{stats.approved}</p>
+          </div>
+
+          <div className="bg-red-50/50 border border-red-200 rounded-2xl p-5 shadow-sm space-y-1 hover:border-red-300 transition-all">
+            <span className="text-xs font-bold text-red-700 uppercase tracking-wider">Rejected</span>
+            <p className="text-3xl font-black text-red-900">{stats.rejected}</p>
+          </div>
+
+          <div className="bg-amber-50/50 border border-amber-200 rounded-2xl p-5 shadow-sm space-y-1 col-span-2 md:col-span-1 hover:border-amber-300 transition-all">
+            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Drafts</span>
+            <p className="text-3xl font-black text-amber-900">{stats.drafts}</p>
+          </div>
+        </div>
+
+        {/* SEARCH & FILTER TOOLBAR */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-3">
+          <div className="flex-1 relative">
+            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">
+              🔍
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search applicant by Name, Citizenship No., District, App No..."
+              className="w-full pl-10 pr-4 py-2.5 text-xs md:text-sm border border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-medium"
+            />
+          </div>
+
+          <div className="w-full md:w-56">
+            <select
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+              className="w-full px-3.5 py-2.5 text-xs md:text-sm border border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 focus:ring-2 focus:ring-blue-600 font-semibold"
+            >
+              <option value="ALL">All Statuses ({stats.total})</option>
+              <option value="SUBMITTED">Pending Review ({stats.pending})</option>
+              <option value="APPROVED">Approved ({stats.approved})</option>
+              <option value="REJECTED">Rejected ({stats.rejected})</option>
+              <option value="DRAFT">Draft ({stats.drafts})</option>
+            </select>
+          </div>
+        </div>
+
+        {/* APPLICANTS TABLE */}
+        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs md:text-sm text-left border-collapse">
+              <thead className="bg-slate-100 text-slate-800 uppercase font-extrabold text-[11px] tracking-wider">
+                <tr>
+                  <th className="p-4 border-b border-slate-200">App No</th>
+                  <th className="p-4 border-b border-slate-200">Applicant Name</th>
+                  <th className="p-4 border-b border-slate-200">Citizenship No</th>
+                  <th className="p-4 border-b border-slate-200">Province & District</th>
+                  <th className="p-4 border-b border-slate-200">Status</th>
+                  <th className="p-4 border-b border-slate-200 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-700">
+                {applications.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-slate-500 font-medium">
+                      No applicant records match your search criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  applications.map((app) => (
+                    <tr key={app.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-4 font-mono font-bold text-slate-900">{app.appNo}</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-xs shadow-inner">
+                            {(app.applicantNameEn || app.user?.name || 'A')[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900">{app.applicantNameEn || app.user?.name || 'Incomplete'}</div>
+                            <div className="text-[11px] text-slate-500 font-medium">{app.user?.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 font-mono font-medium">{app.citizenshipNo || '-'}</td>
+                      <td className="p-4 font-medium">
+                        {app.permDistrict ? `${app.permDistrict} (${app.permProvince || ''})` : '-'}
+                      </td>
+                      <td className="p-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase shadow-sm ${
+                            app.status === 'APPROVED'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : app.status === 'REJECTED'
+                              ? 'bg-red-100 text-red-800 border border-red-300'
+                              : app.status === 'SUBMITTED'
+                              ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300'
+                          }`}
+                        >
+                          ● {app.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handlePrintIndividual(app.id)}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs transition-all flex items-center gap-1"
+                          >
+                            <span>🖨️ Print</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedApp(app);
+                              setRemarks(app.remarks || '');
+                            }}
+                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition-all shadow-sm"
+                          >
+                            Inspect Profile
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      {/* APPLICANT DETAIL INSPECTOR MODAL */}
+      {selectedApp && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl space-y-6">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+              <div>
+                <span className="text-xs font-mono bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-blue-800 font-bold">
+                  {selectedApp.appNo}
+                </span>
+                <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">
+                  {selectedApp.applicantNameEn || selectedApp.user?.name}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePrintIndividual(selectedApp.id)}
+                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
+                >
+                  <span>🖨️ Print Application Sheet</span>
+                </button>
+                <button
+                  onClick={() => setSelectedApp(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Profile Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                <h4 className="font-extrabold text-blue-900 text-sm mb-3 flex items-center gap-1.5">
+                  <span>👤</span> Personal Information
+                </h4>
+                <p><strong>Full Name:</strong> {selectedApp.applicantNameEn}</p>
+                <p><strong>Date of Birth:</strong> {selectedApp.dob} (Age: {selectedApp.age})</p>
+                <p><strong>Gender:</strong> {selectedApp.gender}</p>
+                <p><strong>Citizenship No.:</strong> {selectedApp.citizenshipNo} (Issue District: {selectedApp.citizenshipDistrict})</p>
+                <p><strong>Father's Name:</strong> {selectedApp.fatherName}</p>
+                <p><strong>Mother's Name:</strong> {selectedApp.motherName}</p>
+                <p><strong>Grandfather's Name:</strong> {selectedApp.grandfatherName}</p>
+              </div>
+
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                <h4 className="font-extrabold text-blue-900 text-sm mb-3 flex items-center gap-1.5">
+                  <span>📍</span> Location & Addresses
+                </h4>
+                <p><strong>Province:</strong> {selectedApp.permProvince}</p>
+                <p><strong>District:</strong> {selectedApp.permDistrict}</p>
+                <p><strong>Local Body:</strong> {selectedApp.permLocalBody}</p>
+                <p><strong>Ward & Tole:</strong> Ward #{selectedApp.permWard} ({selectedApp.permTole})</p>
+                <p><strong>Contact Phone:</strong> {selectedApp.permPhone}</p>
+                <p><strong>Email Address:</strong> {selectedApp.permEmail || selectedApp.user?.email}</p>
+              </div>
+            </div>
+
+            {/* Work Experience Section */}
+            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              <h4 className="font-extrabold text-xs text-blue-900 flex items-center gap-1.5">
+                <span>💼</span> Work Experience Entries
+              </h4>
+              <div className="space-y-2 text-xs">
+                {(selectedApp.experiences || []).length === 0 ? (
+                  <p className="text-slate-500">No work experience entries submitted.</p>
+                ) : (
+                  selectedApp.experiences.map((exp: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl space-y-1">
+                      <div className="flex justify-between font-bold text-slate-900">
+                        <span>{exp.organization} — {exp.designation}</span>
+                        <span className="font-mono text-[11px] text-blue-700">{exp.periodFrom} to {exp.periodTo || 'Present'}</span>
+                      </div>
+                      <p className="text-slate-600 text-[11px] whitespace-pre-line">{exp.responsibilities}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Uploaded Documents List */}
+            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              <h4 className="font-extrabold text-xs text-blue-900 flex items-center gap-1.5">
+                <span>📁</span> Uploaded Verification Documents
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                {(selectedApp.documents || []).length === 0 ? (
+                  <p className="text-slate-500">No verification documents uploaded yet.</p>
+                ) : (
+                  selectedApp.documents.map((doc: any) => (
+                    <a
+                      key={doc.id}
+                      href={doc.filePath}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-blue-700 hover:text-blue-900 font-bold shadow-sm transition-all"
+                    >
+                      <span className="truncate max-w-[200px]">📄 {doc.title || doc.fileName}</span>
+                      <span className="text-[10px] bg-blue-50 px-2 py-0.5 rounded text-blue-800 border border-blue-200">View File</span>
+                    </a>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Official Verification & Control Panel */}
+            <div className="p-6 bg-blue-50/70 border border-blue-200 rounded-2xl space-y-4">
+              <h4 className="font-extrabold text-sm text-blue-900 flex items-center gap-2">
+                🛡️ Verification & Approval Control
+              </h4>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Official Verification Remarks</label>
+                <textarea
+                  rows={2}
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="Enter official verification remarks or decision rationale..."
+                  className="w-full p-3 text-xs border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-blue-600"
+                ></textarea>
+              </div>
+
+              {selectedApp.verifiedBy && (
+                <div className="text-[11px] text-slate-600">
+                  Last verified by: <strong className="text-slate-900">{selectedApp.verifiedBy}</strong> on {new Date(selectedApp.verifiedAt).toLocaleString()}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleVerify('APPROVED')}
+                  disabled={verifying}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                >
+                  {verifying ? 'Updating...' : '✅ Approve Application'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleVerify('REJECTED')}
+                  disabled={verifying}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                >
+                  {verifying ? 'Updating...' : '❌ Reject Application'}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
