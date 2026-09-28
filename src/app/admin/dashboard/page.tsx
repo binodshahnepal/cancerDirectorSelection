@@ -259,7 +259,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase shadow-sm ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase shadow-sm whitespace-nowrap ${
                             app.status === 'APPROVED'
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : app.status === 'REJECTED'
@@ -269,7 +269,8 @@ export default function AdminDashboard() {
                               : 'bg-amber-100 text-amber-800 border border-amber-300'
                           }`}
                         >
-                          ● {app.status}
+                          <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
+                          <span>{app.status === 'SUBMITTED' ? 'SUBMITTED' : app.status}</span>
                         </span>
                       </td>
                       <td className="p-4 text-right">
