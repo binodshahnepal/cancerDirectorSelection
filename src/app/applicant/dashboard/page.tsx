@@ -185,55 +185,68 @@ export default function ApplicantDashboard() {
 
   const getDocsByType = (docType: string, legacyTypes: string[] = []) => {
     if (!appData?.documents) return [];
-    return appData.documents.filter(
-      (d: any) => d.docType === docType || legacyTypes.includes(d.docType)
+    const targetTypes = [docType, ...legacyTypes].map(t => t.toUpperCase());
+
+    if (docType === 'CITIZENSHIP_FRONT' || docType === 'CITIZENSHIP_BACK') {
+      targetTypes.push('CITIZENSHIP');
+    }
+    if (docType === 'PASSPORT_FRONT' || docType === 'PASSPORT_BACK') {
+      targetTypes.push('PHOTO', 'PASSPORT');
+    }
+
+    return appData.documents.filter((d: any) =>
+      targetTypes.includes((d.docType || '').toUpperCase())
     );
   };
 
   const renderSingleDocSlot = (docType: string, titleLabel: string, legacyTypes: string[] = []) => {
     const docs = getDocsByType(docType, legacyTypes);
-    const uploaded = docs[0];
 
     return (
       <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2">
         <label className="font-bold block text-slate-800 text-xs">{titleLabel}</label>
-        {uploaded ? (
-          <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800">
-            <div className="truncate max-w-[200px] flex items-center gap-1.5">
-              <span className="font-extrabold text-emerald-600">✓</span>
-              <span className="truncate font-semibold text-xs" title={uploaded.fileName}>
-                {uploaded.fileName}
-              </span>
-              {uploaded.fileSize && (
-                <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded shrink-0">
-                  {formatFileSize(uploaded.fileSize)}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href={uploaded.filePath}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200"
-              >
-                👁️ View
-              </a>
-              {!isSubmitted && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteDocument(uploaded.id)}
-                  className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-md border border-red-200"
-                  title="Delete document"
-                >
-                  🗑️ Delete
-                </button>
-              )}
-            </div>
+        {docs.length > 0 ? (
+          <div className="space-y-2">
+            {docs.map((uploaded: any) => (
+              <div key={uploaded.id} className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800">
+                <div className="truncate max-w-[200px] flex items-center gap-1.5">
+                  <span className="font-extrabold text-emerald-600">✓</span>
+                  <span className="truncate font-semibold text-xs" title={uploaded.fileName}>
+                    {uploaded.fileName}
+                  </span>
+                  {uploaded.fileSize && (
+                    <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded shrink-0">
+                      {formatFileSize(uploaded.fileSize)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={uploaded.filePath}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200 flex items-center gap-1"
+                  >
+                    <span>👁️ View</span>
+                  </a>
+                  {!isSubmitted && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDocument(uploaded.id)}
+                      className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200 flex items-center gap-1"
+                      title="Delete document"
+                    >
+                      <span>🗑️ Delete</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <input
             type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
             disabled={isSubmitted}
             onChange={(e) => handleFileUpload(e, docType, titleLabel)}
             className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"
@@ -271,18 +284,18 @@ export default function ApplicantDashboard() {
                       href={doc.filePath}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200"
+                      className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200 flex items-center gap-1"
                     >
-                      👁️ View
+                      <span>👁️ View</span>
                     </a>
                     {!isSubmitted && (
                       <button
                         type="button"
                         onClick={() => handleDeleteDocument(doc.id)}
-                        className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200"
+                        className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200 flex items-center gap-1"
                         title="Delete document"
                       >
-                        🗑️ Delete
+                        <span>🗑️ Delete</span>
                       </button>
                     )}
                   </div>
@@ -295,11 +308,12 @@ export default function ApplicantDashboard() {
         {!isSubmitted && (
           <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1">
-              {docs.length > 0 ? '+ Add More File(s) (Select single or multiple files):' : 'Select File(s) to upload:'}
+              {docs.length > 0 ? '+ Add More File(s) (PDF or Image files allowed):' : 'Select File(s) to upload:'}
             </label>
             <input
               type="file"
               multiple
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
               disabled={isSubmitted}
               onChange={(e) => handleFileUpload(e, docType, titleLabel)}
               className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"

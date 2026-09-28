@@ -27,7 +27,17 @@ export async function POST(request: Request) {
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     await mkdir(uploadsDir, { recursive: true });
 
-    const ext = path.extname(file.name) || '.pdf';
+    let ext = path.extname(file.name).toLowerCase();
+    if (!ext) {
+      const mime = (file.type || '').toLowerCase();
+      if (mime.includes('png')) ext = '.png';
+      else if (mime.includes('jpeg') || mime.includes('jpg')) ext = '.jpg';
+      else if (mime.includes('webp')) ext = '.webp';
+      else if (mime.includes('gif')) ext = '.gif';
+      else if (mime.includes('word') || mime.includes('docx')) ext = '.docx';
+      else ext = '.pdf';
+    }
+
     const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
     const filePath = path.join(uploadsDir, uniqueFileName);
 
