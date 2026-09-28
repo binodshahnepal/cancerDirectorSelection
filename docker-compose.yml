@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  bkmch-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bkmch-recruitment-portal
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=bkmch-recruitment-production-secret-2026
+    volumes:
+      - bkmch-db-data:/app/prisma
+      - bkmch-uploads-data:/app/public/uploads
+
+volumes:
+  bkmch-db-data:
+    driver: local
+  bkmch-uploads-data:
+    driver: local
