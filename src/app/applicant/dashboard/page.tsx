@@ -96,33 +96,170 @@ export default function ApplicantDashboard() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string, title: string) => {
-    const file = e.target.files?.[0];
-    if (!file || !appData) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('docType', docType);
-    formData.append('title', title);
-    formData.append('applicationId', appData.id);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string, titlePrefix: string) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !appData) return;
 
     try {
-      setMsg({ type: 'success', text: 'Uploading document file...' });
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (data.success) {
-        fetchApplication();
-        setMsg({ type: 'success', text: '✅ Document Uploaded Successfully!' });
-      } else {
-        setMsg({ type: 'error', text: data.error || 'Upload failed' });
+      setMsg({ type: 'success', text: `Uploading ${files.length} document file(s)...` });
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('docType', docType);
+        formData.append('title', files.length > 1 ? `${titlePrefix} (${file.name})` : titlePrefix);
+        formData.append('applicationId', appData.id);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (!data.success) {
+          setMsg({ type: 'error', text: data.error || `Failed to upload ${file.name}` });
+          return;
+        }
       }
+      await fetchApplication();
+      setMsg({ type: 'success', text: '✅ Document(s) Uploaded Successfully!' });
     } catch (err) {
       setMsg({ type: 'error', text: 'File upload failed.' });
     }
   };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    try {
+      const res = await fetch(`/api/upload?id=${encodeURIComponent(docId)}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchApplication();
+        setMsg({ type: 'success', text: '🗑️ Document deleted successfully.' });
+      } else {
+        setMsg({ type: 'error', text: data.error || 'Failed to delete document.' });
+      }
+    } catch (err) {
+      setMsg({ type: 'error', text: 'Error deleting document.' });
+    }
+  };
+
+  const getDocsByType = (docType: string, legacyTypes: string[] = []) => {
+    if (!appData?.documents) return [];
+    return appData.documents.filter(
+      (d: any) => d.docType === docType || legacyTypes.includes(d.docType)
+    );
+  };
+
+  const renderSingleDocSlot = (docType: string, titleLabel: string, legacyTypes: string[] = []) => {
+    const docs = getDocsByType(docType, legacyTypes);
+    const uploaded = docs[0];
+
+    return (
+      <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2">
+        <label className="font-bold block text-slate-800 text-xs">{titleLabel}</label>
+        {uploaded ? (
+          <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800">
+            <div className="truncate max-w-[240px] flex items-center gap-1.5">
+              <span className="font-extrabold text-emerald-600">✓</span>
+              <span className="truncate font-semibold text-xs">{uploaded.fileName}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={uploaded.filePath}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200"
+              >
+                View
+              </a>
+              {!isSubmitted && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteDocument(uploaded.id)}
+                  className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200"
+                  title="Delete document"
+                >
+                  🗑️ Delete
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <input
+            type="file"
+            disabled={isSubmitted}
+            onChange={(e) => handleFileUpload(e, docType, titleLabel)}
+            className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderMultipleDocSlot = (docType: string, titleLabel: string, legacyTypes: string[] = []) => {
+    const docs = getDocsByType(docType, legacyTypes);
+
+    return (
+      <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-3">
+        {docs.length > 0 && (
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-slate-600">Uploaded Documents ({docs.length}):</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {docs.map((doc: any) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800"
+                >
+                  <div className="truncate max-w-[200px] flex items-center gap-1.5">
+                    <span className="font-extrabold text-emerald-600">✓</span>
+                    <span className="truncate font-semibold text-xs" title={doc.fileName}>{doc.fileName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a
+                      href={doc.filePath}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-bold text-blue-700 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200"
+                    >
+                      View
+                    </a>
+                    {!isSubmitted && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200"
+                        title="Delete document"
+                      >
+                        🗑️ Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isSubmitted && (
+          <div>
+            <label className="block text-[11px] font-bold text-slate-600 mb-1">
+              {docs.length > 0 ? '+ Add More File(s) (Select single or multiple files):' : 'Select File(s) to upload:'}
+            </label>
+            <input
+              type="file"
+              multiple
+              disabled={isSubmitted}
+              onChange={(e) => handleFileUpload(e, docType, titleLabel)}
+              className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   const addQualificationRow = () => {
     const list = appData.qualifications || [];
@@ -1030,44 +1167,98 @@ export default function ApplicantDashboard() {
                 <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
                   <span>📁</span> 7. Required Document Uploads
                 </h3>
-                <p className="text-xs text-slate-500">Upload clear scanned copies (PDF or Image format)</p>
+                <p className="text-xs text-slate-500">
+                  Upload clear scanned copies (PDF or Image format). You can upload multiple files for certificates, transcripts, and experience.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                {[
-                  { docType: 'CITIZENSHIP', label: '1. Nepalese Citizenship Certificate (PDF / Image)' },
-                  { docType: 'ACADEMIC', label: '2. Academic Qualification Certificates & Transcripts' },
-                  { docType: 'COUNCIL_REG', label: '3. Medical Council Registration & Renewal Certificate' },
-                  { docType: 'EXPERIENCE', label: '4. Documents Certifying Work Experience' },
-                  { docType: 'TRAINING', label: '5. Training & Special Qualification Certificates' },
-                  { docType: 'CV', label: '6. Curriculum Vitae (CV) / Resume (PDF)' },
-                  { docType: 'PHOTO', label: '7. Recent Passport-Size Photograph (JPG / PNG)' }
-                ].map((docItem) => {
-                  const uploaded = (appData.documents || []).find((d: any) => d.docType === docItem.docType);
-                  return (
-                    <div key={docItem.docType} className="p-4 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-2.5 shadow-sm">
-                      <label className="font-bold block text-slate-800">{docItem.label}</label>
-                      {uploaded ? (
-                        <div className="flex justify-between items-center p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800">
-                          <span className="truncate max-w-[200px] font-semibold">✓ {uploaded.fileName}</span>
-                          <a href={uploaded.filePath} target="_blank" rel="noreferrer" className="underline font-bold text-xs text-blue-700">
-                            View Document
-                          </a>
-                        </div>
-                      ) : (
-                        <input
-                          type="file"
-                          disabled={isSubmitted}
-                          onChange={(e) => handleFileUpload(e, docItem.docType, docItem.label)}
-                          className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-bold hover:file:bg-blue-700 cursor-pointer"
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="space-y-6 text-xs">
+                {/* 1. CITIZENSHIP SECTION (Front & Back) */}
+                <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-4 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>🆔</span> 1. Nepalese Citizenship Certificate (Front & Back)
+                    </h4>
+                    <p className="text-slate-500 text-[11px]">Upload front side and back side of your Citizenship Certificate</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {renderSingleDocSlot('CITIZENSHIP_FRONT', 'Citizenship Certificate (Front Side)', ['CITIZENSHIP'])}
+                    {renderSingleDocSlot('CITIZENSHIP_BACK', 'Citizenship Certificate (Back Side)', [])}
+                  </div>
+                </div>
+
+                {/* 2. PASSPORT SECTION (Front & Back) */}
+                <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-4 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>🛂</span> 2. Passport & Passport-Size Photograph (Front & Back)
+                    </h4>
+                    <p className="text-slate-500 text-[11px]">Upload Passport photo / info page (Front) and address / signature page (Back)</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {renderSingleDocSlot('PASSPORT_FRONT', 'Passport / Photo (Front / Info Page)', ['PHOTO'])}
+                    {renderSingleDocSlot('PASSPORT_BACK', 'Passport (Back / Address Page)', [])}
+                  </div>
+                </div>
+
+                {/* 3. MEDICAL COUNCIL REGISTRATION (Single file) */}
+                <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-3 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>🏥</span> 3. Medical Council Registration & Renewal Certificate (Single File)
+                    </h4>
+                    <p className="text-slate-500 text-[11px]">Upload valid Medical Council Registration or Renewal Certificate</p>
+                  </div>
+                  {renderSingleDocSlot('COUNCIL_REG', 'Medical Council Registration Certificate', ['COUNCIL_REG'])}
+                </div>
+
+                {/* 4. ACADEMIC QUALIFICATIONS (Multiple Files) */}
+                <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-3 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>🎓</span> 4. Academic Qualification Certificates & Transcripts (Multiple Files Allowed)
+                    </h4>
+                    <p className="text-slate-500 text-[11px]">Upload transcripts, character certificates, and degree certificates for all academic levels</p>
+                  </div>
+                  {renderMultipleDocSlot('ACADEMIC', 'Academic Qualification Certificate / Transcript', ['ACADEMIC'])}
+                </div>
+
+                {/* 5. WORK EXPERIENCE (Multiple Files) */}
+                <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-3 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>💼</span> 5. Documents Certifying Work Experience (Multiple Files Allowed)
+                    </h4>
+                    <p className="text-slate-500 text-[11px]">Upload experience certificates, service verification letters, and appointment letters</p>
+                  </div>
+                  {renderMultipleDocSlot('EXPERIENCE', 'Work Experience Document', ['EXPERIENCE'])}
+                </div>
+
+                {/* 6. TRAINING & SPECIAL QUALIFICATION (Multiple Files) */}
+                <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-3 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>📜</span> 6. Training & Special Qualification Certificates (Multiple Files Allowed)
+                    </h4>
+                    <p className="text-slate-500 text-[11px]">Upload fellowship certificates, training completion certificates, workshops, special courses</p>
+                  </div>
+                  {renderMultipleDocSlot('TRAINING', 'Training / Special Qualification Certificate', ['TRAINING'])}
+                </div>
+
+                {/* 7. CV / RESUME (Single File) */}
+                <div className="p-5 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-3 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>📄</span> 7. Curriculum Vitae (CV) / Resume (PDF - Single File)
+                    </h4>
+                    <p className="text-slate-500 text-[11px]">Upload your comprehensive professional Curriculum Vitae (PDF format)</p>
+                  </div>
+                  {renderSingleDocSlot('CV', 'Curriculum Vitae (CV) / Resume', ['CV'])}
+                </div>
               </div>
             </div>
           )}
+
 
           {/* TAB 8: Self Declaration */}
           {activeTab === 8 && (

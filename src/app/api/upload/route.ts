@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, unlink } from 'fs/promises';
 import path from 'path';
 import { prisma } from '@/lib/db';
 
@@ -53,3 +53,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to upload document' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getSessionUser();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const documentId = searchParams.get('id');
+
+    if (!documentId) {
+      return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
+    }
+
+    const doc = await prisma.document.findUnique({
+      where: { id: documentId },
+      include: { application: true }
+    });
+
+    if (!doc) {
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+    }
+
+    if (session.role !== 'ADMIN' && doc.application.userId !== session.userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (doc.filePath) {
+      const fullPath = path.join(process.cwd(), 'public', doc.filePath.replace(/^\//, ''));
+      try {
+        await unlink(fullPath);
+      } catch (err) {
+        console.warn('Could not delete file from disk:', err);
+      }
+    }
+
+    await prisma.document.delete({
+      where: { id: documentId }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Delete document error:', error);
+    return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 });
+  }
+}
+
