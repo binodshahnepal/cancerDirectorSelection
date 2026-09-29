@@ -14,10 +14,14 @@ export async function GET() {
   });
 
   if (!dbUser) {
+    const deleted = session.email ? await prisma.deletedAccount.findUnique({
+      where: { email: session.email }
+    }) : null;
+
     const response = NextResponse.json({
       user: null,
-      accountDeleted: true,
-      message: 'Your account has been deleted by the administrator.'
+      accountDeleted: !!deleted,
+      message: deleted ? 'Your account has been deleted by the administrator.' : 'Session expired'
     });
     response.cookies.delete('auth_token');
     return response;
