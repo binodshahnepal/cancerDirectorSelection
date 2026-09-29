@@ -219,8 +219,58 @@ export default function AdminDashboard() {
     window.open(`/admin/print?all=true&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(search)}`, '_blank');
   };
 
+  const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
+  const [adminName, setAdminName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
+
   const handleMergePdf = (appId: string) => {
     window.open(`/api/admin/merge-pdf?id=${encodeURIComponent(appId)}`, '_blank');
+  };
+
+  const handleCreateAdminSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminName || !adminEmail || !adminPassword) return;
+    setCreatingAdmin(true);
+    try {
+      const res = await fetch('/api/admin/create-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: adminName,
+          email: adminEmail,
+          password: adminPassword
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowCreateAdminModal(false);
+        setAdminName('');
+        setAdminEmail('');
+        setAdminPassword('');
+        Swal.fire({
+          icon: 'success',
+          title: 'Administrator Account Created!',
+          text: `New admin account (${adminEmail}) was created successfully.`,
+          confirmButtonColor: '#059669'
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to Create Admin',
+          text: data.error || 'Could not create administrator account'
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An unexpected error occurred while creating admin account.'
+      });
+    } finally {
+      setCreatingAdmin(false);
+    }
   };
 
   if (loading) {
@@ -254,7 +304,13 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500">Executive Director Position | B.P. Koirala Memorial Cancer Hospital</p>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+            <button
+              onClick={() => setShowCreateAdminModal(true)}
+              className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <span>➕ Create New Admin</span>
+            </button>
             <button
               onClick={handlePrintAll}
               className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -583,6 +639,85 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* CREATE NEW ADMIN MODAL */}
+      {showCreateAdminModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl space-y-5">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-2 bg-emerald-100 text-emerald-800 rounded-xl font-bold text-sm">🛡️</span>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Create New Administrator</h3>
+                  <p className="text-xs text-slate-500">Grant administrator access to team member</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCreateAdminModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAdminSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Administrator Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={adminName}
+                  onChange={(e) => setAdminName(e.target.value)}
+                  placeholder="e.g. Dr. Ram Sharma"
+                  className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Official Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin.name@bkmch.gov.np"
+                  className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Temporary Password *</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateAdminModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingAdmin}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {creatingAdmin ? 'Creating...' : '➕ Create Admin'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
