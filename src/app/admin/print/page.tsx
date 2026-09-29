@@ -103,16 +103,36 @@ function AdminPrintContent() {
                 <h3 className="font-bold text-xs uppercase bg-slate-100 p-1.5 border border-slate-300">
                   1. Personal Details
                 </h3>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-slate-800 leading-relaxed">
-                  <p><strong>Full Name:</strong> {app.applicantNameEn || app.user?.name || '-'}</p>
-                  <p><strong>Date of Birth:</strong> {app.dob || '-'} (Age: {app.age || '-'})</p>
-                  <p><strong>Gender:</strong> {app.gender || '-'}</p>
-                  <p><strong>Citizenship No.:</strong> {app.citizenshipNo || '-'} ({app.citizenshipDistrict || '-'} / {app.citizenshipDate || '-'})</p>
-                  <p><strong>Father's Name:</strong> {app.fatherName || '-'}</p>
-                  <p><strong>Mother's Name:</strong> {app.motherName || '-'}</p>
-                  <p><strong>Grandfather's Name:</strong> {app.grandfatherName || '-'}</p>
-                  <p><strong>Spouse's Name:</strong> {app.spouseName || '-'}</p>
-                </div>
+                {(() => {
+                  const printPhoto = (app.documents || []).find((d: any) => (d.docType || '').toUpperCase() === 'PHOTO');
+                  return (
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-slate-800 leading-relaxed flex-1">
+                        <p><strong>Full Name:</strong> {app.applicantNameEn || app.user?.name || '-'}</p>
+                        <p><strong>Date of Birth:</strong> {app.dob || '-'} (Age: {app.age || '-'})</p>
+                        <p><strong>Gender:</strong> {app.gender || '-'}</p>
+                        <p><strong>Citizenship No.:</strong> {app.citizenshipNo || '-'} ({app.citizenshipDistrict || '-'} / {app.citizenshipDate || '-'})</p>
+                        <p><strong>Father's Name:</strong> {app.fatherName || '-'}</p>
+                        <p><strong>Mother's Name:</strong> {app.motherName || '-'}</p>
+                        <p><strong>Grandfather's Name:</strong> {app.grandfatherName || '-'}</p>
+                        <p><strong>Spouse's Name:</strong> {app.spouseName || '-'}</p>
+                      </div>
+                      <div className="shrink-0 text-center">
+                        {printPhoto ? (
+                          <img
+                            src={printPhoto.filePath}
+                            alt="Passport Photo"
+                            className="w-24 h-30 object-cover border-2 border-slate-400 rounded-sm bg-white"
+                          />
+                        ) : (
+                          <div className="w-24 h-30 border-2 border-dashed border-slate-400 rounded-sm flex flex-col items-center justify-center p-1 text-[9px] text-slate-400 text-center font-bold">
+                            <span>PASSPORT SIZE PHOTO</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* 2. Address */}

@@ -461,6 +461,8 @@ export default function ApplicantDashboard() {
     { id: 8, label: 'Self Declaration', icon: '✍️' }
   ];
 
+  const photoDoc = (appData?.documents || []).find((d: any) => (d.docType || '').toUpperCase() === 'PHOTO');
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       <Navbar user={user} />
@@ -489,12 +491,27 @@ export default function ApplicantDashboard() {
               </span>
             </div>
 
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">
-              Executive Director Application Form
-            </h2>
-            <p className="text-xs text-blue-100/90 leading-relaxed">
-              B.P. Koirala Memorial Cancer Hospital | Position Notice No. 01/2083/2084
-            </p>
+              <div className="flex items-center gap-4">
+                {photoDoc ? (
+                  <img
+                    src={photoDoc.filePath}
+                    alt="Applicant Photo"
+                    className="w-14 h-18 md:w-16 md:h-20 object-cover rounded-2xl border-2 border-white/80 shadow-md shrink-0 bg-white"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-xl font-black shrink-0">
+                    {(user?.name || appData?.applicantNameEn || 'A')[0].toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-xl md:text-3xl font-black tracking-tight leading-tight">
+                    {appData?.applicantNameEn || user?.name || 'Executive Director Application Form'}
+                  </h2>
+                  <p className="text-xs text-blue-100/90 leading-relaxed mt-0.5">
+                    B.P. Koirala Memorial Cancer Hospital | Position Notice No. 01/2083/2084
+                  </p>
+                </div>
+              </div>
 
             {/* Completion Progress Bar */}
             <div className="pt-2 space-y-1 max-w-md">
@@ -646,7 +663,83 @@ export default function ApplicantDashboard() {
                 <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
                   <span>👤</span> 1. Personal Information
                 </h3>
-                <p className="text-xs text-slate-500">Provide your official identity details matching your citizenship</p>
+                <p className="text-xs text-slate-500">Provide your official identity details matching your citizenship and upload your photograph</p>
+              </div>
+
+              {/* PASSPORT PHOTO UPLOAD CARD */}
+              <div className="p-5 border-2 border-blue-200 rounded-2xl bg-gradient-to-r from-blue-50/70 to-indigo-50/70 shadow-sm flex flex-col sm:flex-row items-center gap-6">
+                <div className="relative shrink-0">
+                  {photoDoc ? (
+                    <div className="relative group">
+                      <img
+                        src={photoDoc.filePath}
+                        alt="Applicant Passport Photo"
+                        className="w-28 h-36 object-cover rounded-xl border-2 border-blue-600 shadow-md bg-white"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <a
+                          href={photoDoc.filePath}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 bg-white text-slate-800 rounded-lg text-xs font-bold shadow hover:bg-slate-100"
+                          title="View Full Size Image"
+                        >
+                          👁️
+                        </a>
+                        {!isSubmitted && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDocument(photoDoc.id, photoDoc.fileName)}
+                            className="p-1.5 bg-red-600 text-white rounded-lg text-xs font-bold shadow hover:bg-red-700"
+                            title="Delete Photo"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-28 h-36 border-2 border-dashed border-blue-400 rounded-xl bg-white flex flex-col items-center justify-center text-center p-2 text-blue-800 shadow-inner">
+                      <span className="text-3xl mb-1">📸</span>
+                      <span className="text-[10px] font-extrabold uppercase leading-tight">Passport Photo</span>
+                      <span className="text-[9px] text-slate-400 mt-0.5">(Required)</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-2 text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <span className="px-2.5 py-0.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded-full tracking-wider">
+                      Official Photograph
+                    </span>
+                    {photoDoc && (
+                      <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                        <span>✓</span> Uploaded
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-extrabold text-sm md:text-base text-slate-900">
+                    Applicant Passport Size Photograph
+                  </h4>
+                  <p className="text-xs text-slate-600 max-w-lg leading-relaxed">
+                    Please upload a recent, clear passport-size photograph (JPEG/PNG format). This photo will be printed on your official application sheet and verified by the selection committee.
+                  </p>
+
+                  {!isSubmitted && (
+                    <div className="pt-2">
+                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-all active:scale-95">
+                        <span>{photoDoc ? '🔄 Change Passport Photo' : '📤 Upload Passport Photo'}</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          disabled={isSubmitted}
+                          onChange={(e) => handleFileUpload(e, 'PHOTO', 'Applicant Passport Photo')}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

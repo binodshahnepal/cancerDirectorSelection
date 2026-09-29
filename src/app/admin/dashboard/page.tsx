@@ -527,14 +527,24 @@ export default function AdminDashboard() {
                         </td>
                       </tr>
                     ) : (
-                      applications.map((app) => (
+                      applications.map((app) => {
+                        const appPhoto = app.documents?.find((d: any) => (d.docType || '').toUpperCase() === 'PHOTO');
+                        return (
                         <tr key={app.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="p-4 font-mono font-bold text-slate-900">{app.appNo}</td>
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-xs shadow-inner">
-                                {(app.applicantNameEn || app.user?.name || 'A')[0].toUpperCase()}
-                              </div>
+                              {appPhoto ? (
+                                <img
+                                  src={appPhoto.filePath}
+                                  alt="Applicant Photo"
+                                  className="w-9 h-9 rounded-full object-cover border border-blue-400 shadow-sm shrink-0 bg-white"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-xs shadow-inner shrink-0">
+                                  {(app.applicantNameEn || app.user?.name || 'A')[0].toUpperCase()}
+                                </div>
+                              )}
                               <div>
                                 <div className="font-bold text-slate-900">{app.applicantNameEn || app.user?.name || 'Incomplete'}</div>
                                 <div className="text-[11px] text-slate-500 font-medium">{app.user?.email}</div>
@@ -595,7 +605,8 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                         </tr>
-                      ))
+                      );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -673,15 +684,24 @@ export default function AdminDashboard() {
                     ) : (
                       users.map((u) => {
                         const userApp = u.applications && u.applications.length > 0 ? u.applications[0] : null;
+                        const userPhoto = userApp?.documents?.find((d: any) => (d.docType || '').toUpperCase() === 'PHOTO');
                         return (
                           <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs shadow-inner ${
-                                  u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                  {(u.name || 'U')[0].toUpperCase()}
-                                </div>
+                                {userPhoto ? (
+                                  <img
+                                    src={userPhoto.filePath}
+                                    alt="User Photo"
+                                    className="w-9 h-9 rounded-full object-cover border border-purple-400 shadow-sm shrink-0 bg-white"
+                                  />
+                                ) : (
+                                  <div className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs shadow-inner shrink-0 ${
+                                    u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {(u.name || 'U')[0].toUpperCase()}
+                                  </div>
+                                )}
                                 <div>
                                   <div className="font-bold text-slate-900">{u.name}</div>
                                   <div className="text-[11px] text-slate-500 font-medium">{u.email}</div>
@@ -773,13 +793,29 @@ export default function AdminDashboard() {
             
             {/* Modal Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-200 pb-4">
-              <div>
-                <span className="text-xs font-mono bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-blue-800 font-bold">
-                  {selectedApp.appNo}
-                </span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1.5">
-                  {selectedApp.applicantNameEn || selectedApp.user?.name}
-                </h3>
+              <div className="flex items-center gap-4">
+                {(() => {
+                  const modalPhoto = selectedApp.documents?.find((d: any) => (d.docType || '').toUpperCase() === 'PHOTO');
+                  return modalPhoto ? (
+                    <img
+                      src={modalPhoto.filePath}
+                      alt="Applicant Photo"
+                      className="w-14 h-18 object-cover rounded-xl border-2 border-blue-600 shadow-md shrink-0 bg-white"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-lg shadow-inner shrink-0">
+                      {(selectedApp.applicantNameEn || selectedApp.user?.name || 'A')[0].toUpperCase()}
+                    </div>
+                  );
+                })()}
+                <div>
+                  <span className="text-xs font-mono bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-blue-800 font-bold">
+                    {selectedApp.appNo}
+                  </span>
+                  <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1.5">
+                    {selectedApp.applicantNameEn || selectedApp.user?.name}
+                  </h3>
+                </div>
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
                 <button
