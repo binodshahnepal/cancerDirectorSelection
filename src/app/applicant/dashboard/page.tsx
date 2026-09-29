@@ -1641,19 +1641,6 @@ export default function ApplicantDashboard() {
                   <span>I Agree to the Self Declaration Terms *</span>
                 </label>
               </div>
-
-              {!isSubmitted && (
-                <div className="pt-4 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => handleSave(true)}
-                    disabled={saving || !appData.declarationAccepted}
-                    className="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-extrabold text-sm rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50"
-                  >
-                    🚀 Submit Application Now
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
