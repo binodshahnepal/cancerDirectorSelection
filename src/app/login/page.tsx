@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Swal from 'sweetalert2';
+import { showAlert } from '@/lib/alert';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,7 +18,7 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('reason') === 'deleted') {
-        Swal.fire({
+        showAlert({
           icon: 'warning',
           title: 'Account Deleted',
           text: 'Your account and application have been deleted by the administrator.',
@@ -43,7 +43,7 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) {
         if (data.error === 'ACCOUNT_DELETED') {
-          Swal.fire({
+          showAlert({
             icon: 'error',
             title: 'Account Deleted',
             text: data.message || 'Your application and account have been deleted by the administrator. Please contact B.P. Koirala Memorial Cancer Hospital if you have questions.',

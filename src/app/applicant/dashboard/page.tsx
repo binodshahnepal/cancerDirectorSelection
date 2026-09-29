@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import Swal from 'sweetalert2';
+import { showAlert } from '@/lib/alert';
 import { nepalProvinces, allDistricts } from '@/lib/nepalData';
 
 export default function ApplicantDashboard() {
@@ -23,7 +23,7 @@ export default function ApplicantDashboard() {
       .then((data) => {
         if (!data.user) {
           if (data.accountDeleted) {
-            Swal.fire({
+            showAlert({
               icon: 'error',
               title: 'Account Deleted',
               text: 'Your application and account have been deleted by the administrator.',
@@ -50,7 +50,7 @@ export default function ApplicantDashboard() {
         setAppData(data.application);
         const app = data.application;
         if (app.status === 'APPROVED') {
-          Swal.fire({
+          showAlert({
             icon: 'success',
             title: '🎉 Application Approved!',
             html: `
@@ -61,7 +61,7 @@ export default function ApplicantDashboard() {
             confirmButtonText: 'Great!'
           });
         } else if (app.status === 'REJECTED') {
-          Swal.fire({
+          showAlert({
             icon: 'error',
             title: 'Application Status: Rejected',
             html: `
