@@ -396,6 +396,13 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap sm:flex-nowrap">
             <button
+              onClick={() => window.open(`/api/admin/export-excel?status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(search)}`, '_blank')}
+              className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
+              title="Download Candidates Data Report in Excel/CSV format"
+            >
+              <span>📊 Export Candidates Excel</span>
+            </button>
+            <button
               onClick={() => setShowCreateAdminModal(true)}
               className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
             >
