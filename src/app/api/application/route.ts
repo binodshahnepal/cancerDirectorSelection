@@ -20,9 +20,29 @@ export async function GET() {
     });
 
     if (!application) {
-      // Auto-create initial draft application for applicant
-      const count = await prisma.application.count();
-      const appNo = `BKMCH-${2026001 + count}`;
+      // Auto-create initial draft application for applicant with collision-free appNo
+      let appNo = '';
+      let attempts = 0;
+      const latestApp = await prisma.application.findFirst({
+        orderBy: { createdAt: 'desc' },
+        select: { appNo: true }
+      });
+
+      let nextSeq = 2026001;
+      if (latestApp?.appNo && latestApp.appNo.startsWith('BKMCH-')) {
+        const numPart = parseInt(latestApp.appNo.replace('BKMCH-', ''), 10);
+        if (!isNaN(numPart)) {
+          nextSeq = numPart + 1;
+        }
+      }
+
+      while (attempts < 100) {
+        appNo = `BKMCH-${nextSeq + attempts}`;
+        const existing = await prisma.application.findUnique({ where: { appNo } });
+        if (!existing) break;
+        attempts++;
+      }
+
       application = await prisma.application.create({
         data: {
           userId: session.userId,
