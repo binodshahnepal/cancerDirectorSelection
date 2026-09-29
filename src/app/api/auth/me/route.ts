@@ -14,9 +14,16 @@ export async function GET() {
   });
 
   if (!dbUser) {
-    const deleted = session.email ? await prisma.deletedAccount.findUnique({
-      where: { email: session.email }
-    }) : null;
+    let deleted = null;
+    try {
+      if (session.email) {
+        deleted = await prisma.deletedAccount.findUnique({
+          where: { email: session.email }
+        });
+      }
+    } catch (e) {
+      // Table fallback
+    }
 
     const response = NextResponse.json({
       user: null,

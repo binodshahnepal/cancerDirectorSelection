@@ -18,9 +18,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 });
     }
 
-    await prisma.deletedAccount.deleteMany({
-      where: { email: email.toLowerCase().trim() }
-    });
+    try {
+      await prisma.deletedAccount.deleteMany({
+        where: { email: email.toLowerCase().trim() }
+      });
+    } catch (e) {
+      // Ignore if DeletedAccount table does not exist
+    }
 
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({

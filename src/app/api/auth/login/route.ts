@@ -15,9 +15,14 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      const deleted = await prisma.deletedAccount.findUnique({
-        where: { email: email.toLowerCase().trim() }
-      });
+      let deleted = null;
+      try {
+        deleted = await prisma.deletedAccount.findUnique({
+          where: { email: email.toLowerCase().trim() }
+        });
+      } catch (e) {
+        // Table fallback
+      }
 
       if (deleted) {
         return NextResponse.json({
