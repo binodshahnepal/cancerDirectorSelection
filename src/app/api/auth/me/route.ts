@@ -13,5 +13,15 @@ export async function GET() {
     select: { id: true, name: true, email: true, role: true, createdAt: true }
   });
 
+  if (!dbUser) {
+    const response = NextResponse.json({
+      user: null,
+      accountDeleted: true,
+      message: 'Your account has been deleted by the administrator.'
+    });
+    response.cookies.delete('auth_token');
+    return response;
+  }
+
   return NextResponse.json({ user: dbUser });
 }

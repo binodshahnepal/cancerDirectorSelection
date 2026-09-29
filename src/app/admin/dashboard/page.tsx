@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import Swal from 'sweetalert2';
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -58,17 +59,18 @@ export default function AdminDashboard() {
     fetchApplications(search, val);
   };
 
-  const handleVerify = async (status: 'APPROVED' | 'REJECTED') => {
-    if (!selectedApp) return;
+  const handleVerify = async (status: 'APPROVED' | 'REJECTED', customRemarks?: string, targetApp?: any) => {
+    const appToVerify = targetApp || selectedApp;
+    if (!appToVerify) return;
     setVerifying(true);
     try {
       const res = await fetch('/api/admin/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          applicationId: selectedApp.id,
+          applicationId: appToVerify.id,
           status,
-          remarks
+          remarks: customRemarks !== undefined ? customRemarks : remarks
         })
       });
       const data = await res.json();
@@ -76,18 +78,107 @@ export default function AdminDashboard() {
         setSelectedApp(null);
         setRemarks('');
         fetchApplications();
+        if (status === 'APPROVED') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Application Approved!',
+            text: `Application for ${appToVerify.applicantNameEn || 'applicant'} has been approved.`,
+            confirmButtonColor: '#059669'
+          });
+        } else {
+          Swal.fire({
+            icon: 'info',
+            title: 'Application Rejected',
+            text: `Application for ${appToVerify.applicantNameEn || 'applicant'} has been rejected and the rejection reason was saved.`,
+            confirmButtonColor: '#dc2626'
+          });
+        }
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Verification Failed',
+          text: data.error || 'Failed to update application status'
+        });
       }
     } catch (err) {
       console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error processing application status'
+      });
     } finally {
       setVerifying(false);
     }
   };
 
-  const handleDelete = async (appId: string) => {
-    if (!window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
-      return;
+  const handleApproveWithPrompt = async (appTarget?: any) => {
+    const target = appTarget || selectedApp;
+    if (!target) return;
+
+    const result = await Swal.fire({
+      title: 'Approve Application',
+      text: `Confirm approval for applicant: ${target.applicantNameEn || target.user?.name || target.appNo}`,
+      icon: 'question',
+      input: 'textarea',
+      inputLabel: 'Official Verification / Approval Remarks (Optional)',
+      inputValue: remarks || target.remarks || '',
+      inputPlaceholder: 'Enter any official remarks, eligibility notes, or interview instructions...',
+      showCancelButton: true,
+      confirmButtonColor: '#059669',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '✅ Approve Application',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (result.isConfirmed) {
+      handleVerify('APPROVED', result.value || '', target);
     }
+  };
+
+  const handleRejectWithPrompt = async (appTarget?: any) => {
+    const target = appTarget || selectedApp;
+    if (!target) return;
+
+    const result = await Swal.fire({
+      title: 'Reject Application',
+      html: `Please enter the <strong>reason for rejection</strong> for <strong>${target.applicantNameEn || target.user?.name || target.appNo}</strong>.<br/><span class="text-xs text-red-600 mt-1 block">This reason will be directly displayed to the applicant on their dashboard.</span>`,
+      icon: 'warning',
+      input: 'textarea',
+      inputLabel: 'Rejection Reason (Required)',
+      inputValue: remarks || target.remarks || '',
+      inputPlaceholder: 'e.g., Council registration document is expired. Work experience criteria not met.',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return 'You must enter a reason for rejecting this application!';
+        }
+      },
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '❌ Confirm Rejection',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (result.isConfirmed) {
+      handleVerify('REJECTED', result.value.trim(), target);
+    }
+  };
+
+  const handleDelete = async (appId: string, appName?: string) => {
+    const result = await Swal.fire({
+      title: 'Delete Application & Account?',
+      html: `Are you sure you want to permanently delete the application for <strong>${appName || 'this applicant'}</strong>?<br/><span class="text-xs text-red-600 font-bold mt-1.5 block">⚠️ This will delete their user account, application, and all uploaded documents.</span>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, Delete Permanently',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`/api/admin/applications?id=${encodeURIComponent(appId)}`, {
         method: 'DELETE'
@@ -98,11 +189,25 @@ export default function AdminDashboard() {
           setSelectedApp(null);
         }
         fetchApplications();
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted Successfully',
+          text: 'The application and user account have been deleted. The applicant will be notified upon login.',
+          confirmButtonColor: '#2563eb'
+        });
       } else {
-        alert(data.error || 'Failed to delete application');
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: data.error || 'Failed to delete application'
+        });
       }
     } catch (err) {
-      alert('Error deleting application');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error deleting application'
+      });
     }
   };
 
@@ -298,9 +403,9 @@ export default function AdminDashboard() {
                             Inspect Profile
                           </button>
                           <button
-                            onClick={() => handleDelete(app.id)}
+                            onClick={() => handleDelete(app.id, app.applicantNameEn || app.user?.name)}
                             className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold text-xs transition-all flex items-center gap-1"
-                            title="Delete Application"
+                            title="Delete Application & Account"
                           >
                             <span>🗑️ Delete</span>
                           </button>
@@ -454,26 +559,26 @@ export default function AdminDashboard() {
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => handleVerify('APPROVED')}
+                  onClick={() => handleApproveWithPrompt(selectedApp)}
                   disabled={verifying}
-                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
                   {verifying ? 'Updating...' : '✅ Approve Application'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleVerify('REJECTED')}
+                  onClick={() => handleRejectWithPrompt(selectedApp)}
                   disabled={verifying}
-                  className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                  className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
                   {verifying ? 'Updating...' : '❌ Reject Application'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(selectedApp.id)}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                  onClick={() => handleDelete(selectedApp.id, selectedApp.applicantNameEn || selectedApp.user?.name)}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  🗑️ Delete Application
+                  <span>🗑️ Delete Application</span>
                 </button>
               </div>
             </div>

@@ -15,6 +15,17 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
+      const deleted = await prisma.deletedAccount.findUnique({
+        where: { email: email.toLowerCase().trim() }
+      });
+
+      if (deleted) {
+        return NextResponse.json({
+          error: 'ACCOUNT_DELETED',
+          message: 'Your application and account have been deleted by the administrator.'
+        }, { status: 403 });
+      }
+
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Swal from 'sweetalert2';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,20 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('reason') === 'deleted') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Account Deleted',
+          text: 'Your account and application have been deleted by the administrator.',
+          confirmButtonColor: '#dc2626'
+        });
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +42,17 @@ export default function LoginPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Invalid login credentials');
+        if (data.error === 'ACCOUNT_DELETED') {
+          Swal.fire({
+            icon: 'error',
+            title: 'Account Deleted',
+            text: data.message || 'Your application and account have been deleted by the administrator. Please contact B.P. Koirala Memorial Cancer Hospital if you have questions.',
+            confirmButtonColor: '#dc2626'
+          });
+          setError(data.message || 'Your account has been deleted by the administrator.');
+        } else {
+          setError(data.error || 'Invalid login credentials');
+        }
         setLoading(false);
         return;
       }

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import Swal from 'sweetalert2';
 import { nepalProvinces, allDistricts } from '@/lib/nepalData';
 
 export default function ApplicantDashboard() {
@@ -21,7 +22,18 @@ export default function ApplicantDashboard() {
       .then((res) => res.json())
       .then((data) => {
         if (!data.user) {
-          router.push('/login');
+          if (data.accountDeleted) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Account Deleted',
+              text: 'Your application and account have been deleted by the administrator.',
+              confirmButtonColor: '#dc2626'
+            }).then(() => {
+              router.push('/login?reason=deleted');
+            });
+          } else {
+            router.push('/login');
+          }
           return;
         }
         setUser(data.user);
@@ -36,6 +48,33 @@ export default function ApplicantDashboard() {
       const data = await res.json();
       if (data.application) {
         setAppData(data.application);
+        const app = data.application;
+        if (app.status === 'APPROVED') {
+          Swal.fire({
+            icon: 'success',
+            title: '🎉 Application Approved!',
+            html: `
+              <p class="text-slate-700 text-sm mb-3">Congratulations! Your application for <strong>Executive Director Position</strong> at B.P. Koirala Memorial Cancer Hospital has been verified and <strong>APPROVED</strong> by the selection committee.</p>
+              ${app.remarks ? `<div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs text-left font-medium"><strong>Committee Remarks:</strong> ${app.remarks}</div>` : ''}
+            `,
+            confirmButtonColor: '#059669',
+            confirmButtonText: 'Great!'
+          });
+        } else if (app.status === 'REJECTED') {
+          Swal.fire({
+            icon: 'error',
+            title: 'Application Status: Rejected',
+            html: `
+              <p class="text-slate-700 text-sm mb-3">We regret to inform you that your application for Executive Director Position has been <strong>REJECTED</strong> by the selection committee.</p>
+              <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-900 text-left space-y-1">
+                <div class="font-bold text-xs uppercase tracking-wider text-red-700">Official Reason for Rejection:</div>
+                <div class="font-semibold text-xs md:text-sm whitespace-pre-line">${app.remarks || 'No specific reason provided.'}</div>
+              </div>
+            `,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Understand & View Details'
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -487,6 +526,57 @@ export default function ApplicantDashboard() {
             </button>
           </div>
         </div>
+
+        {/* OFFICIAL STATUS VERIFICATION NOTIFICATION CARD */}
+        {appData?.status === 'APPROVED' && (
+          <div className="bg-emerald-50 border-2 border-emerald-300 rounded-3xl p-5 md:p-6 shadow-sm space-y-3">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white font-black text-xl flex items-center justify-center shrink-0 shadow-md">
+                ✓
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base md:text-lg font-black text-emerald-950">
+                  Official Verification Status: APPROVED 🎉
+                </h3>
+                <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+                  Congratulations! Your recruitment application for Executive Director position has been verified and APPROVED by the administrator.
+                </p>
+                {appData.remarks && (
+                  <div className="mt-2.5 p-3.5 bg-white border border-emerald-200 rounded-xl text-xs text-emerald-900 font-semibold space-y-1 shadow-xs">
+                    <span className="text-[11px] text-emerald-700 uppercase font-extrabold tracking-wider block">Committee Remarks / Next Steps:</span>
+                    <span>{appData.remarks}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {appData?.status === 'REJECTED' && (
+          <div className="bg-red-50 border-2 border-red-300 rounded-3xl p-5 md:p-6 shadow-sm space-y-3">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-red-600 text-white font-black text-xl flex items-center justify-center shrink-0 shadow-md">
+                ✕
+              </div>
+              <div className="space-y-2 w-full">
+                <div>
+                  <h3 className="text-base md:text-lg font-black text-red-950">
+                    Official Verification Status: REJECTED
+                  </h3>
+                  <p className="text-xs text-red-800 font-medium leading-relaxed">
+                    We regret to inform you that your application was rejected by the selection committee after verification.
+                  </p>
+                </div>
+                <div className="p-4 bg-white border border-red-200 rounded-2xl text-xs space-y-1.5 shadow-xs">
+                  <span className="text-[11px] font-black text-red-700 uppercase tracking-wider block">Official Reason for Rejection:</span>
+                  <p className="text-red-950 font-bold text-xs md:text-sm whitespace-pre-line leading-relaxed">
+                    {appData.remarks || 'No specific remarks provided by administrator.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Message Alert */}
         {msg && (

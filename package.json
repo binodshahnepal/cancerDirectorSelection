@@ -20,7 +20,8 @@
     "pdf-lib": "^1.17.1",
     "prisma": "^5.22.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sweetalert2": "^11.26.25"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

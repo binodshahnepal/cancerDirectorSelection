@@ -70,11 +70,39 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Application ID is required' }, { status: 400 });
     }
 
-    await prisma.application.delete({
-      where: { id: applicationId }
+    const app = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { user: true }
     });
 
-    return NextResponse.json({ success: true, message: 'Application deleted successfully' });
+    if (!app) {
+      return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+    }
+
+    if (app.user?.email) {
+      await prisma.deletedAccount.upsert({
+        where: { email: app.user.email },
+        create: {
+          email: app.user.email,
+          appNo: app.appNo,
+          name: app.applicantNameEn || app.user.name,
+          reason: 'Deleted by Administrator'
+        },
+        update: {
+          deletedAt: new Date()
+        }
+      });
+
+      await prisma.user.delete({
+        where: { id: app.userId }
+      });
+    } else {
+      await prisma.application.delete({
+        where: { id: applicationId }
+      });
+    }
+
+    return NextResponse.json({ success: true, message: 'Application and user account deleted successfully' });
   } catch (error: any) {
     console.error('Delete application error:', error);
     return NextResponse.json({ error: 'Failed to delete application' }, { status: 500 });

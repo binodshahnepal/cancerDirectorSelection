@@ -121,3 +121,12 @@ model Document {
   mimeType      String
   uploadedAt    DateTime    @default(now())
 }
+
+model DeletedAccount {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  appNo     String?
+  name      String?
+  reason    String?
+  deletedAt DateTime @default(now())
+}
