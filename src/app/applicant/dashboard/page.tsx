@@ -1657,6 +1657,61 @@ export default function ApplicantDashboard() {
             </div>
           )}
 
+          {/* STEP NAVIGATION FOOTER BAR */}
+          <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Previous Button */}
+            <div className="w-full sm:w-auto">
+              {activeTab > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab((prev) => Math.max(1, prev - 1));
+                    window.scrollTo({ top: 350, behavior: 'smooth' });
+                  }}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-300 transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95 cursor-pointer"
+                >
+                  <span>⬅️ Previous Step</span>
+                </button>
+              ) : (
+                <div />
+              )}
+            </div>
+
+            {/* Current Step Badge */}
+            <div className="text-center">
+              <span className="px-3.5 py-1.5 bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-full">
+                Step {activeTab} of {tabs.length}: <span className="text-blue-700 font-extrabold">{tabs[activeTab - 1]?.label}</span>
+              </span>
+            </div>
+
+            {/* Next or Submit Button */}
+            <div className="w-full sm:w-auto">
+              {activeTab < tabs.length ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab((prev) => Math.min(tabs.length, prev + 1));
+                    window.scrollTo({ top: 350, behavior: 'smooth' });
+                  }}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                >
+                  <span>Next Step ➡️</span>
+                </button>
+              ) : (
+                !isSubmitted && (
+                  <button
+                    type="button"
+                    onClick={() => handleSave(true)}
+                    disabled={saving || !appData?.declarationAccepted}
+                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>🚀 Submit Application</span>
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
         </div>
       </main>
     </div>
