@@ -64,47 +64,107 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const applicationId = searchParams.get('id');
+    const id = searchParams.get('id');
 
-    if (!applicationId) {
-      return NextResponse.json({ error: 'Application ID is required' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'Application or User ID is required' }, { status: 400 });
     }
 
-    const app = await prisma.application.findUnique({
-      where: { id: applicationId },
+    // Try finding application by application ID first, then by userId
+    let app = await prisma.application.findUnique({
+      where: { id },
       include: { user: true }
     });
 
     if (!app) {
-      return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+      app = await prisma.application.findFirst({
+        where: { userId: id },
+        include: { user: true }
+      });
     }
 
-    if (app.user?.email) {
-      await prisma.deletedAccount.upsert({
-        where: { email: app.user.email },
-        create: {
-          email: app.user.email,
-          appNo: app.appNo,
-          name: app.applicantNameEn || app.user.name,
-          reason: 'Deleted by Administrator'
-        },
-        update: {
-          deletedAt: new Date()
-        }
+    let userId: string | null = null;
+    let email: string | null = null;
+    let appNo: string | null = null;
+    let name: string | null = null;
+
+    if (app) {
+      userId = app.userId;
+      email = app.user?.email || null;
+      appNo = app.appNo;
+      name = app.applicantNameEn || app.user?.name || null;
+    } else {
+      // Try to find user directly
+      const user = await prisma.user.findUnique({ where: { id } });
+      if (user) {
+        userId = user.id;
+        email = user.email;
+        name = user.name;
+      }
+    }
+
+    if (!app && !userId) {
+      return NextResponse.json({ error: 'Record not found' }, { status: 404 });
+    }
+
+    // Log to DeletedAccount if we have an email
+    if (email) {
+      try {
+        await prisma.deletedAccount.upsert({
+          where: { email },
+          create: {
+            email,
+            appNo: appNo || 'N/A',
+            name: name || 'Applicant',
+            reason: 'Deleted by Administrator'
+          },
+          update: {
+            deletedAt: new Date()
+          }
+        });
+      } catch (logErr) {
+        console.error('Failed to log deleted account:', logErr);
+      }
+    }
+
+    // Perform sequential deletion of relational data if userId exists
+    if (userId) {
+      const userApps = await prisma.application.findMany({
+        where: { userId },
+        select: { id: true }
       });
 
-      await prisma.user.delete({
-        where: { id: app.userId }
-      });
-    } else {
-      await prisma.application.delete({
-        where: { id: applicationId }
-      });
+      const appIds = userApps.map(a => a.id);
+      if (app?.id && !appIds.includes(app.id)) {
+        appIds.push(app.id);
+      }
+
+      if (appIds.length > 0) {
+        await prisma.qualification.deleteMany({ where: { applicationId: { in: appIds } } });
+        await prisma.experience.deleteMany({ where: { applicationId: { in: appIds } } });
+        await prisma.training.deleteMany({ where: { applicationId: { in: appIds } } });
+        await prisma.document.deleteMany({ where: { applicationId: { in: appIds } } });
+        await prisma.application.deleteMany({ where: { id: { in: appIds } } });
+      }
+
+      try {
+        await prisma.user.delete({ where: { id: userId } });
+      } catch (userDelErr) {
+        console.error('Failed to delete user record:', userDelErr);
+      }
+    } else if (app) {
+      // Clean up application only if no userId
+      await prisma.qualification.deleteMany({ where: { applicationId: app.id } });
+      await prisma.experience.deleteMany({ where: { applicationId: app.id } });
+      await prisma.training.deleteMany({ where: { applicationId: app.id } });
+      await prisma.document.deleteMany({ where: { applicationId: app.id } });
+      await prisma.application.delete({ where: { id: app.id } });
     }
 
     return NextResponse.json({ success: true, message: 'Application and user account deleted successfully' });
   } catch (error: any) {
     console.error('Delete application error:', error);
-    return NextResponse.json({ error: 'Failed to delete application' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to delete application' }, { status: 500 });
   }
 }
+
