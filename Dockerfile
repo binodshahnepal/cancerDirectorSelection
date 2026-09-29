@@ -20,7 +20,7 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL="file:./prisma/dev.db"
 ENV JWT_SECRET="bkmch-recruitment-production-secret-2026"
 
 # Create directories for DB and uploads
