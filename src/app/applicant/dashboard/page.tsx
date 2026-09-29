@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import Swal from 'sweetalert2';
 import { showAlert } from '@/lib/alert';
 import { nepalProvinces, allDistricts } from '@/lib/nepalData';
 
@@ -213,8 +214,20 @@ export default function ApplicantDashboard() {
     }
   };
 
-  const handleDeleteDocument = async (docId: string) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return;
+  const handleDeleteDocument = async (docId: string, fileName?: string) => {
+    const result = await Swal.fire({
+      title: 'Delete Document?',
+      html: `Are you sure you want to delete ${fileName ? `<strong>${fileName}</strong>` : 'this document'}?<br/><span class="text-xs text-red-600 font-bold mt-1.5 block">⚠️ This action cannot be undone.</span>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, Delete File',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`/api/upload?id=${encodeURIComponent(docId)}`, {
         method: 'DELETE'
@@ -222,12 +235,25 @@ export default function ApplicantDashboard() {
       const data = await res.json();
       if (data.success) {
         await fetchApplication();
-        setMsg({ type: 'success', text: '🗑️ Document deleted successfully.' });
+        Swal.fire({
+          icon: 'success',
+          title: 'Document Deleted',
+          text: 'The document has been removed successfully.',
+          confirmButtonColor: '#2563eb'
+        });
       } else {
-        setMsg({ type: 'error', text: data.error || 'Failed to delete document.' });
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: data.error || 'Failed to delete document.'
+        });
       }
     } catch (err) {
-      setMsg({ type: 'error', text: 'Error deleting document.' });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An unexpected error occurred while deleting document.'
+      });
     }
   };
 
@@ -273,7 +299,7 @@ export default function ApplicantDashboard() {
                   {!isSubmitted && (
                     <button
                       type="button"
-                      onClick={() => handleDeleteDocument(uploaded.id)}
+                      onClick={() => handleDeleteDocument(uploaded.id, uploaded.fileName)}
                       className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200 flex items-center gap-1"
                       title="Delete document"
                     >
@@ -341,7 +367,7 @@ export default function ApplicantDashboard() {
                     {!isSubmitted && (
                       <button
                         type="button"
-                        onClick={() => handleDeleteDocument(doc.id)}
+                        onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
                         className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200 flex items-center gap-1"
                         title="Delete document"
                       >
@@ -1396,7 +1422,7 @@ export default function ApplicantDashboard() {
                                   {!isSubmitted && (
                                     <button
                                       type="button"
-                                      onClick={() => handleDeleteDocument(doc.id)}
+                                      onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
                                       className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-[11px] rounded-lg transition-all flex items-center gap-1"
                                     >
                                       <span>🗑️ Delete File</span>
